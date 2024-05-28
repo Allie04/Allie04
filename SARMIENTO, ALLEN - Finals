@@ -1,0 +1,101 @@
+Dependencies;
+Express: npm install express
+Folder Structure
+.
+├── server.js
+└── models
+    └── student.js
+Models (models/student.js)
+This file defines the student data structure.
+
+JavaScript
+
+const mongoose = require('mongoose'); // Replace with your preferred database library
+
+const studentSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  // Add more student fields as needed
+});
+
+module.exports = mongoose.model('Student', studentSchema);
+Use code with caution.
+content_copy
+Replace mongoose with your preferred database library (e.g., MongoDB, PostgreSQL) and adapt the schema accordingly.
+
+Server (server.js)
+This file sets up the Express server, defines routes, and handles requests.
+
+
+const express = require('express');
+const bodyParser = require('body-parser');
+const Student = require('./models/student'); // Import the student model
+
+const app = express();
+const port = process.env.PORT || 3000;
+
+// Parse incoming JSON data
+app.use(bodyParser.json());
+
+// Route for adding a student (POST)
+app.post('/students', async (req, res) => {
+  try {
+    const newStudent = new Student(req.body);
+    await newStudent.save();
+    res.status(201).json({ message: 'Student created successfully!' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error creating student!' });
+  }
+});
+
+// Route for editing a student (PUT)
+app.put('/students/:id', async (req, res) => {
+  try {
+    const studentId = req.params.id;
+    const updatedStudent = await Student.findByIdAndUpdate(studentId, req.body, { new: true });
+    if (!updatedStudent) {
+      return res.status(404).json({ message: 'Student not found!' });
+    }
+    res.status(200).json({ message: 'Student updated successfully!' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error updating student!' });
+  }
+});
+
+// Route for deleting a student (DELETE)
+app.delete('/students/:id', async (req, res) => {
+  try {
+    const studentId = req.params.id;
+    await Student.findByIdAndDelete(studentId);
+    res.status(200).json({ message: 'Student deleted successfully!' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error deleting student!' });
+  }
+});
+
+app.listen(port, () => console.log(`Server listening on port ${port}`));
+
+
+//Usage//
+-Start the server: node server.js
+-Use tools like Postman to send requests:
+-Add a student (POST): http://localhost:3000/students with student data in JSON format (e.g., { "name": "Allen A.", "email": "allen.a@example.com" }).
+-Edit a student (PUT): http://localhost:3000/students/:id with updated data (replace :id with the actual student ID).
+-Delete a student (DELETE): http://localhost:3000/students/:id (replace :id with the student ID).
+
+//This is a basic example. You can extend it further by://
+
+-Implementing authentication and authorization for secure access.
+-Using a database library for persistent data storage.
+-Adding validations for student data.
+-Including additional functionalities like retrieving all students or searching by specific criteria.
